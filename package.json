@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.19.0",
+    "@supabase/supabase-js": "^2.44.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
-    "react-toastify": "^11.0.5",
-    "@supabase/supabase-js": "^2.44.4"
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

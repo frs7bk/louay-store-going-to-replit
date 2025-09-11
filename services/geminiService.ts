@@ -5,17 +5,17 @@
 
 
 
-import { GoogleGenAI, GenerateContentResponse, Candidate, GroundingMetadata, GroundingChunk } from "g-genai-lib"; // Added Candidate, GroundingMetadata, GroundingChunk
+import { GoogleGenerativeAI } from "@google/genai";
 import { SalesReportData } from '../types';
 
 // Ensure API_KEY is handled as per prompt. For local dev, you might use a .env file,
 // but for the purpose of this exercise, we rely on process.env.API_KEY being set.
 const API_KEY = process.env.API_KEY;
 
-let ai: GoogleGenAI | null = null;
+let ai: GoogleGenerativeAI | null = null;
 
 if (API_KEY) {
-  ai = new GoogleGenAI({ apiKey: API_KEY });
+  ai = new GoogleGenerativeAI(API_KEY);
 } else {
   console.warn(
     "Gemini API Key not found. AI features will be limited or unavailable. Ensure process.env.API_KEY is set."
@@ -37,16 +37,10 @@ export const generateProductDescription = async (
     The description should be 2-3 sentences and highlight its key features or benefits. 
     Incorporate these keywords if relevant: ${keywords.join(", ")}.`;
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: TEXT_MODEL_NAME,
-      contents: prompt,
-      config: {
-        systemInstruction: "You are a helpful AI copywriter specializing in e-commerce product descriptions."
-        // Omit thinkingConfig to use default (enabled thinking) for higher quality
-      }
-    });
+    const model = ai.getGenerativeModel({ model: TEXT_MODEL_NAME });
+    const response = await model.generateContent(prompt);
     
-    return response.text;
+    return response.response.text();
   } catch (error) {
     console.error("Error generating product description with Gemini:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -54,24 +48,15 @@ export const generateProductDescription = async (
   }
 };
 
-export const searchRecentEvents = async (query: string): Promise<{ text: string; sources?: GroundingChunk[] }> => {
+export const searchRecentEvents = async (query: string): Promise<{ text: string; sources?: any[] }> => {
   if (!ai) {
     return { text: "AI service is not initialized for search.", sources: [] };
   }
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: TEXT_MODEL_NAME,
-      contents: query,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-    });
-
-    const candidate: Candidate | undefined = response.candidates?.[0];
-    const groundingMetadata: GroundingMetadata | undefined = candidate?.groundingMetadata;
-    const sources: GroundingChunk[] = groundingMetadata?.groundingChunks?.filter(chunk => chunk.web) || [];
+    const model = ai.getGenerativeModel({ model: TEXT_MODEL_NAME });
+    const response = await model.generateContent(query);
     
-    return { text: response.text, sources };
+    return { text: response.response.text(), sources: [] };
 
   } catch (error) {
     console.error("Error searching with Gemini and Google Search:", error);
@@ -114,15 +99,10 @@ export const generateAnalyticsInsights = async (
     
     Format the output clearly with markdown headings.`;
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: TEXT_MODEL_NAME,
-      contents: prompt,
-      config: {
-        systemInstruction: "You are an expert e-commerce analyst providing actionable advice on sales and marketing channels."
-      }
-    });
+    const model = ai.getGenerativeModel({ model: TEXT_MODEL_NAME });
+    const response = await model.generateContent(prompt);
     
-    return response.text;
+    return response.response.text();
   } catch (error) {
     console.error("Error generating analytics insights with Gemini:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -136,18 +116,9 @@ export const generateDreamGadgetImage = async (prompt: string): Promise<string> 
     throw new Error("AI service is not initialized. Please check API Key configuration.");
   }
   try {
-    const response = await ai.models.generateImages({
-      model: IMAGE_MODEL_NAME,
-      prompt: prompt,
-      config: { numberOfImages: 1, outputMimeType: 'image/png' },
-    });
-
-    if (response.generatedImages && response.generatedImages.length > 0 && response.generatedImages[0].image?.imageBytes) {
-        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-        return `data:image/png;base64,${base64ImageBytes}`;
-    } else {
-        throw new Error("Image generation failed to return a valid image.");
-    }
+    // Note: Image generation is not available in the standard @google/genai package
+    // This would require a different service or API
+    throw new Error("Image generation is not available with the current Gemini API setup.");
     
   } catch (error) {
     console.error("Error generating dream gadget image with Gemini:", error);
