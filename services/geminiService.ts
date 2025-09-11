@@ -5,17 +5,17 @@
 
 
 
-import { GoogleGenerativeAI } from "@google/genai";
+import * as GenAI from "@google/genai";
 import { SalesReportData } from '../types';
 
 // Ensure API_KEY is handled as per prompt. For local dev, you might use a .env file,
 // but for the purpose of this exercise, we rely on process.env.API_KEY being set.
 const API_KEY = process.env.API_KEY;
 
-let ai: GoogleGenerativeAI | null = null;
+let ai: GenAI.GoogleGenerativeAI | null = null;
 
 if (API_KEY) {
-  ai = new GoogleGenerativeAI(API_KEY);
+  ai = new GenAI.GoogleGenerativeAI(API_KEY);
 } else {
   console.warn(
     "Gemini API Key not found. AI features will be limited or unavailable. Ensure process.env.API_KEY is set."
